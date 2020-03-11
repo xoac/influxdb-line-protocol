@@ -18,7 +18,8 @@ pub struct TagKey(String);
 
 impl TagKey {
     /// Create Tag with check for correctness.
-    pub fn new(s: String) -> Result<Self, Error> {
+    pub fn new(s: impl Into<String>) -> Result<Self, Error> {
+        let s = s.into();
         prevent_key(&s)?;
         Ok(Self(s))
     }
@@ -27,7 +28,14 @@ impl TagKey {
 impl TryFrom<String> for TagKey {
     type Error = Error;
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        TagKey::new(value)
+        Self::new(value)
+    }
+}
+
+impl TryFrom<&str> for TagKey {
+    type Error = Error;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::new(value)
     }
 }
 
@@ -48,7 +56,8 @@ impl AsRef<str> for TagKey {
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash, Display, Deref)]
 pub struct TagValue(String);
 impl TagValue {
-    pub fn new(s: String) -> Result<Self, Error> {
+    pub fn new(s: impl Into<String>) -> Result<Self, Error> {
+        let s = s.into();
         prevent_tag_value(&s)?;
         Ok(Self(s))
     }
@@ -57,7 +66,14 @@ impl TagValue {
 impl TryFrom<String> for TagValue {
     type Error = Error;
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        TagValue::new(value)
+        Self::new(value)
+    }
+}
+
+impl TryFrom<&str> for TagValue {
+    type Error = Error;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::new(value)
     }
 }
 

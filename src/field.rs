@@ -19,7 +19,8 @@ pub struct FieldKey(String);
 
 impl FieldKey {
     /// Create FiledKey with check for correctness.
-    pub fn new(s: String) -> Result<Self, Error> {
+    pub fn new(s: impl Into<String>) -> Result<Self, Error> {
+        let s = s.into();
         prevent_key(&s)?;
         Ok(Self(s))
     }
@@ -28,7 +29,14 @@ impl FieldKey {
 impl TryFrom<String> for FieldKey {
     type Error = Error;
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        FieldKey::new(value)
+        Self::new(value)
+    }
+}
+
+impl TryFrom<&str> for FieldKey {
+    type Error = Error;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::new(value)
     }
 }
 
@@ -100,7 +108,7 @@ pub struct Field {
 }
 
 impl Field {
-    pub fn new<V>(key: String, value: V) -> Result<Self, Error>
+    pub fn new<V>(key: impl Into<String>, value: V) -> Result<Self, Error>
     where
         V: TryInto<FieldValue>,
         V::Error: Into<Error>,
