@@ -1,6 +1,6 @@
 [![crates.io](https://img.shields.io/crates/v/influxdb-line-protocol.svg)](https://crates.io/crates/influxdb-line-protocol)
 [![Documentation](https://docs.rs/influxdb-line-protocol/badge.svg)](https://docs.rs/influxdb-line-protocol/)
-![CI master](GITHUB_ORG_PATHinfluxdb-line-protocol/workflows/Continuous%20integration/badge.svg?branch=master)
+[![CI master](https://github.com/xoac/influxdb-line-protocol/workflows/Continuous%20integration/badge.svg?branch=master)](https://github.com/xoac/influxdb-line-protocol/actions?query=workflow%3A%22Continuous+integration%22)
 ![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
 
 # influxdb-line-protocol

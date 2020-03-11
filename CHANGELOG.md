@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Init with [cargo-generate](https://github.com/ashleygwilliams/cargo-generate) with [template](https://github.com/xoac/crates-io-lib-template)
 
-[Unreleased]: GITHUB_ORG_PATHinfluxdb-line-protocol/compare/v0.1.0...HEAD
-[0.1.0]: GITHUB_ORG_PATHinfluxdb-line-protocol/releases/tag/v0.1.0
+[Unreleased]: https://github.com/xoac/influxdb-line-protocol/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/xoac/influxdb-line-protocol/releases/tag/v0.1.0
 
 
