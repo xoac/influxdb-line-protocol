@@ -107,6 +107,22 @@ pub struct Field {
     value: FieldValue,
 }
 
+impl TryFrom<(String, String)> for Field {
+    type Error = Error;
+    fn try_from(v: (String, String)) -> Result<Self, Self::Error> {
+        let (key, value) = v;
+        Self::new(key, value)
+    }
+}
+
+impl TryFrom<(&str, &str)> for Field {
+    type Error = Error;
+    fn try_from(v: (&str, &str)) -> Result<Self, Self::Error> {
+        let (key, value) = v;
+        Self::new(key, value)
+    }
+}
+
 impl Field {
     pub fn new<V>(key: impl Into<String>, value: V) -> Result<Self, Error>
     where
