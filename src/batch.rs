@@ -6,15 +6,24 @@ use super::Point;
 #[derive(Debug, Clone)]
 pub struct Batch(Vec<Point>);
 
-impl From<Point> for Batch {
-    fn from(point: Point) -> Self {
-        Self(vec![point])
+impl<V> From<V> for Batch
+where
+    V: Into<Point>,
+{
+    fn from(v: V) -> Self {
+        let point = vec![v.into()];
+        point.into()
     }
 }
 
-impl From<Vec<Point>> for Batch {
-    fn from(inner: Vec<Point>) -> Self {
-        Self(inner)
+impl<V> From<Vec<V>> for Batch
+where
+    V: Into<Point>,
+{
+    fn from(v: Vec<V>) -> Self {
+        let point_vec = v.into_iter().map(|v| v.into()).collect();
+
+        Self(point_vec)
     }
 }
 
