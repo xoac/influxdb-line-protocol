@@ -1,3 +1,4 @@
+use ordered_float::FloatIsNan;
 use std::convert::Infallible;
 use thiserror::Error;
 
@@ -14,4 +15,6 @@ pub enum Error {
     StartWithForbieden_,
     #[error("{}", .0)]
     Infallible(#[from] Infallible),
+    #[error("{}", .0)]
+    FloatIsNan(#[from] FloatIsNan),
 }

@@ -82,6 +82,22 @@ impl TryFrom<&str> for FieldValue {
     }
 }
 
+impl TryFrom<f64> for FieldValue {
+    type Error = Error;
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        NotNan::new(value)
+            .map(FieldValue::from)
+            .map_err(Error::from)
+    }
+}
+
+impl TryFrom<f32> for FieldValue {
+    type Error = Error;
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        f64::from(value).try_into()
+    }
+}
+
 impl FieldValue {
     // convert self to string according to docs: https://v2.docs.influxdata.com/v2.0/reference/syntax/line-protocol/
     fn to_text(&self) -> String {
@@ -107,19 +123,19 @@ pub struct Field {
     value: FieldValue,
 }
 
-impl TryFrom<(String, String)> for Field {
+impl<K, V> TryFrom<(K, V)> for Field
+where
+    K: TryInto<FieldKey>,
+    K::Error: Into<Error>,
+    V: TryInto<FieldValue>,
+    V::Error: Into<Error>,
+{
     type Error = Error;
-    fn try_from(v: (String, String)) -> Result<Self, Self::Error> {
-        let (key, value) = v;
-        Self::new(key, value)
-    }
-}
-
-impl TryFrom<(&str, &str)> for Field {
-    type Error = Error;
-    fn try_from(v: (&str, &str)) -> Result<Self, Self::Error> {
-        let (key, value) = v;
-        Self::new(key, value)
+    fn try_from(v: (K, V)) -> Result<Self, Self::Error> {
+        let (into_key, into_value) = v;
+        let key = into_key.try_into().map_err(|x| x.into())?;
+        let value = into_value.try_into().map_err(|x| x.into())?;
+        Ok(Field { key, value })
     }
 }
 
@@ -187,5 +203,14 @@ mod tests {
         let key = String::from(r#"" =,"#);
         let fs = Field::new(key, fv).unwrap();
         assert_eq!(fs.to_text(), r#""\ \=\,="\"\\""#);
+    }
+
+    #[test]
+    fn try_from_for_field() {
+        let _: Field = ("Some", "Value").try_into().unwrap();
+        let _: Field = ("U", 45u64).try_into().unwrap();
+        let _: Field = ("I", 45i64).try_into().unwrap();
+        let _: Field = ("F", 44f64).try_into().unwrap();
+        let _: Field = ("bool", true).try_into().unwrap();
     }
 }
