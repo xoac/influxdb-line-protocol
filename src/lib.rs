@@ -26,6 +26,7 @@ mod into_point;
 
 pub use batch::Batch;
 pub use field::{Field, FieldValue};
+pub use into_point::IntoPoint;
 pub use measurement::Measurement;
 pub use point::Point;
 pub use tag::Tag;
