@@ -135,7 +135,7 @@ where
         let (into_key, into_value) = v;
         let key = into_key.try_into().map_err(|x| x.into())?;
         let value = into_value.try_into().map_err(|x| x.into())?;
-        Ok(Field { key, value })
+        Ok(Self { key, value })
     }
 }
 
@@ -206,11 +206,20 @@ mod tests {
     }
 
     #[test]
-    fn try_from_for_field() {
+    fn try_into_for_field() {
         let _: Field = ("Some", "Value").try_into().unwrap();
         let _: Field = ("U", 45u64).try_into().unwrap();
         let _: Field = ("I", 45i64).try_into().unwrap();
         let _: Field = ("F", 44f64).try_into().unwrap();
         let _: Field = ("bool", true).try_into().unwrap();
+    }
+
+    #[test]
+    fn try_from_for_field() {
+        let _ = Field::try_from(("Some", "Value")).unwrap();
+        let _ = Field::try_from(("U", 45u64)).unwrap();
+        let _ = Field::try_from(("I", 45i64)).unwrap();
+        let _ = Field::try_from(("F", 44f64)).unwrap();
+        let _ = Field::try_from(("bool", true)).unwrap();
     }
 }

@@ -7,7 +7,7 @@ use super::{
 use derive_more::{Deref, Display};
 
 use std::borrow::Borrow;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 /// The key part of the key-value pair that makes up a tag.
 ///
@@ -85,6 +85,22 @@ impl TryFrom<&str> for TagValue {
 pub struct Tag {
     key: TagKey,
     value: TagValue,
+}
+
+impl<K, V> TryFrom<(K, V)> for Tag
+where
+    K: TryInto<TagKey>,
+    K::Error: Into<Error>,
+    V: TryInto<TagValue>,
+    V::Error: Into<Error>,
+{
+    type Error = Error;
+    fn try_from(v: (K, V)) -> Result<Self, Self::Error> {
+        let (into_key, into_value) = v;
+        let key = into_key.try_into().map_err(|x| x.into())?;
+        let value = into_value.try_into().map_err(|x| x.into())?;
+        Ok(Self { key, value })
+    }
 }
 
 impl Tag {
