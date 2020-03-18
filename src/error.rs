@@ -2,12 +2,7 @@ use ordered_float::FloatIsNan;
 use std::convert::Infallible;
 use thiserror::Error;
 
-#[derive(Debug)]
-pub struct NamingRestrictionErr;
-#[derive(Debug)]
-pub struct StartWithForbiden_;
-
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone)]
 pub enum Error {
     #[error("New line `\\n` is not allowed")]
     NewLine,

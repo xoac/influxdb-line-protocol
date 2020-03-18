@@ -1,4 +1,4 @@
-use super::{error::Error, escape, Field, FiledSet, Measurement, Tag, TagSet, Timestamp};
+use super::{error::Error, escape, Field, Measurement, Tag, TagSet, Timestamp};
 use std::{convert::TryInto, iter::FromIterator};
 
 /// Represents a single data record
@@ -15,7 +15,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn builder(measurment: impl Into<String>) -> PointBuilder {
+    pub fn builder(measurment: impl Into<String>) -> Result<PointBuilder, Error> {
         PointBuilder::new(measurment)
     }
 
@@ -47,25 +47,30 @@ impl Point {
 /// Builder for [`Point`]
 ///
 /// [`Point`]:Point
+#[derive(Debug, Clone)]
 pub struct PointBuilder {
-    measurment: String,
-    tag_set: TagSet,
-    field_set: FiledSet,
-    timestamp: Timestamp,
+    point: Point,
+    errors: Vec<Error>,
 }
 
 impl PointBuilder {
-    pub fn new(measurment: impl Into<String>) -> Self {
-        Self {
-            measurment: measurment.into(),
+    pub fn new(measurment: impl Into<String>) -> Result<Self, Error> {
+        let measurment = Measurement::new(measurment)?;
+        let point = Point {
+            measurment,
             tag_set: Default::default(),
             field_set: Default::default(),
             timestamp: Timestamp::Now,
-        }
+        };
+
+        Ok(Self {
+            point,
+            errors: vec![],
+        })
     }
 
     pub fn add_tag(mut self, tag_set: Tag) -> Self {
-        self.tag_set.push(tag_set);
+        self.point.tag_set.push(tag_set);
         self
     }
 
@@ -74,7 +79,8 @@ impl PointBuilder {
         I: IntoIterator,
         I::Item: Into<Tag>,
     {
-        self.tag_set = self
+        self.point.tag_set = self
+            .point
             .tag_set
             .into_iter()
             .chain(tags.into_iter().map(|x| x.into()))
@@ -82,30 +88,40 @@ impl PointBuilder {
         self
     }
 
-    pub fn try_add_tag<I, E>(self, tag: I) -> Result<Self, E>
+    pub fn try_add_tag<I>(mut self, tag: I) -> Self
     where
         I: TryInto<Tag>,
-        E: From<I::Error>,
+        I::Error: Into<Error>,
     {
-        let tag = tag.try_into()?;
-        Ok(self.add_tag(tag))
+        match tag.try_into() {
+            Ok(tag) => self.add_tag(tag),
+            Err(err) => {
+                self.errors.push(err.into());
+                self
+            }
+        }
     }
 
-    pub fn try_add_tags<I, E>(self, iter: I) -> Result<Self, E>
+    pub fn try_add_tags<I>(mut self, iter: I) -> Self
     where
         I: IntoIterator,
         I::Item: TryInto<Tag>,
-        E: From<<I::Item as TryInto<Tag>>::Error>,
+        <I::Item as TryInto<Tag>>::Error: Into<Error>,
     {
         let tags_iter = iter.into_iter().map(|x| x.try_into());
-        let res_tags = Result::from_iter(tags_iter.collect::<Vec<Result<Tag, _>>>());
-        let v: Vec<Tag> = res_tags?;
-
-        Ok(self.add_tags(v))
+        let res_tags: Result<Vec<Tag>, _> =
+            Result::from_iter(tags_iter.collect::<Vec<Result<Tag, _>>>());
+        match res_tags {
+            Ok(v) => self.add_tags(v),
+            Err(err) => {
+                self.errors.push(err.into());
+                self
+            }
+        }
     }
 
     pub fn add_field(mut self, field: Field) -> Self {
-        self.field_set.push(field);
+        self.point.field_set.push(field);
         self
     }
 
@@ -114,7 +130,8 @@ impl PointBuilder {
         I: IntoIterator,
         I::Item: Into<Field>,
     {
-        self.field_set = self
+        self.point.field_set = self
+            .point
             .field_set
             .into_iter()
             .chain(fields.into_iter().map(|x| x.into()))
@@ -122,36 +139,43 @@ impl PointBuilder {
         self
     }
 
-    pub fn try_add_fields<I, E>(self, iter: I) -> Result<Self, E>
+    pub fn try_add_fields<I>(mut self, iter: I) -> Self
     where
         I: IntoIterator,
         I::Item: TryInto<Field>,
-        E: From<<I::Item as TryInto<Field>>::Error>,
+        <I::Item as TryInto<Field>>::Error: Into<Error>,
     {
         let tags_iter = iter.into_iter().map(|x| x.try_into());
-        let res_tags = Result::from_iter(tags_iter.collect::<Vec<Result<Field, _>>>());
-        let v: Vec<Field> = res_tags?;
-
-        Ok(self.add_fields(v))
+        let res_tags: Result<Vec<Field>, _> =
+            Result::from_iter(tags_iter.collect::<Vec<Result<Field, _>>>());
+        match res_tags {
+            Ok(v) => self.add_fields(v),
+            Err(err) => {
+                self.errors.push(err.into());
+                self
+            }
+        }
     }
 
     pub fn timestamp(mut self, timestamp: impl Into<Timestamp>) -> Self {
-        self.timestamp = timestamp.into();
+        self.point.timestamp = timestamp.into();
         self
     }
 
-    pub fn build(self) -> Result<Point, Error> {
-        if self.field_set.is_empty() {
+    pub fn errors(&self) -> &Vec<Error> {
+        &self.errors
+    }
+
+    pub fn build(mut self) -> Result<Point, Error> {
+        if self.point.field_set.is_empty() {
             panic!("At least one field value is required!");
         }
 
-        //TODO change return Error
-        Ok(Point {
-            measurment: Measurement::new(self.measurment)?,
-            tag_set: self.tag_set,
-            field_set: self.field_set,
-            timestamp: self.timestamp,
-        })
+        if let Some(err) = self.errors.drain(..).next() {
+            Err(err)
+        } else {
+            Ok(self.point)
+        }
     }
 }
 
@@ -165,6 +189,7 @@ mod tests {
         let b = Field::new("c", 6i64).unwrap();
 
         let _point = Point::builder("test")
+            .unwrap()
             .add_fields(vec![a, b])
             .build()
             .unwrap();
@@ -174,8 +199,8 @@ mod tests {
     fn try_add_tags_to_builder() {
         let v = vec![("field1", "value1"), ("field2", "value2")];
         let _point = Point::builder("test")
-            .try_add_fields::<_, Error>(v)
             .unwrap()
+            .try_add_fields(v)
             .build()
             .unwrap();
     }
