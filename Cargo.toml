@@ -28,14 +28,17 @@ readme = "README.md"
 
 [features]
 nightly = []
+serde = ["serde1", "ordered-float/serde"]
+default = ["serde"]
 
 [badges]
- maintenance = { status = "actively-developed" }
+maintenance = { status = "actively-developed" }
 
 [dependencies]
 derive_more = "0.99"
 ordered-float = "1"
 thiserror = "1"
+serde1 = { package = "serde", version = "1", optional = true }
 
 [dev-dependencies]
 regex = "1"

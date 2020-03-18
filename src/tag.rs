@@ -9,6 +9,9 @@ use derive_more::{Deref, Display};
 use std::borrow::Borrow;
 use std::convert::{TryFrom, TryInto};
 
+#[cfg(feature = "serde")]
+use serde1::{de::Error as DeserializeError, Deserialize, Deserializer, Serialize, Serializer};
+
 /// The key part of the key-value pair that makes up a tag.
 ///
 /// Tag keys are strings and they store metadata.
@@ -22,6 +25,27 @@ impl TagKey {
         let s = s.into();
         prevent_key(&s)?;
         Ok(Self(s))
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for TagKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for TagKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        TagKey::new(s).map_err(D::Error::custom)
     }
 }
 
@@ -55,6 +79,28 @@ impl AsRef<str> for TagKey {
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Hash, Display, Deref)]
 pub struct TagValue(String);
+
+#[cfg(feature = "serde")]
+impl Serialize for TagValue {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for TagValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        TagValue::new(s).map_err(D::Error::custom)
+    }
+}
+
 impl TagValue {
     pub fn new(s: impl Into<String>) -> Result<Self, Error> {
         let s = s.into();
