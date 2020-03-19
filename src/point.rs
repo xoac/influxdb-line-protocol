@@ -139,6 +139,20 @@ impl PointBuilder {
         self
     }
 
+    pub fn try_add_filed<V>(mut self, field: V) -> Self
+    where
+        V: TryInto<Field>,
+        V::Error: Into<Error>,
+    {
+        match field.try_into() {
+            Ok(field) => self.add_field(field),
+            Err(err) => {
+                self.errors.push(err.into());
+                self
+            }
+        }
+    }
+
     pub fn try_add_fields<I>(mut self, iter: I) -> Self
     where
         I: IntoIterator,
