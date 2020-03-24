@@ -139,7 +139,7 @@ impl PointBuilder {
         self
     }
 
-    pub fn try_add_filed<V>(mut self, field: V) -> Self
+    pub fn try_add_field<V>(mut self, field: V) -> Self
     where
         V: TryInto<Field>,
         V::Error: Into<Error>,
