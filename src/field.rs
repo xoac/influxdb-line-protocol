@@ -180,6 +180,12 @@ impl TryFrom<&str> for FieldValue {
     }
 }
 
+impl From<u8> for FieldValue {
+    fn from(value: u8) -> Self {
+        Self::from(u64::from(value))
+    }
+}
+
 impl TryFrom<f64> for FieldValue {
     type Error = Error;
     fn try_from(value: f64) -> Result<Self, Self::Error> {
@@ -320,6 +326,7 @@ mod tests {
         let _ = Field::try_from(("U", 45u64)).unwrap();
         let _ = Field::try_from(("I", 45i64)).unwrap();
         let _ = Field::try_from(("F", 44f64)).unwrap();
+        let _ = Field::try_from(("F", 44f32)).unwrap();
         let _ = Field::try_from(("bool", true)).unwrap();
     }
 }

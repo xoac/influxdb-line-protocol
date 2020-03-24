@@ -25,7 +25,7 @@ mod timestamp;
 pub use batch::Batch;
 pub use field::{Field, FieldKey, FieldValue};
 pub use measurement::Measurement;
-pub use point::Point;
+pub use point::{Point, PointBuilder};
 pub use tag::{Tag, TagKey, TagValue};
 pub use timestamp::Timestamp;
 
