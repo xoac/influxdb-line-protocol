@@ -31,7 +31,7 @@ impl Point {
                 first_iter = false;
                 line += &format!(" {}", field_set.to_text());
             } else {
-                line += &format!(", {}", field_set.to_text());
+                line += &format!(",{}", field_set.to_text());
             }
         }
 
@@ -212,10 +212,12 @@ mod tests {
     #[test]
     fn try_add_tags_to_builder() {
         let v = vec![("field1", "value1"), ("field2", "value2")];
-        let _point = Point::builder("test")
+        let point = Point::builder("test")
             .unwrap()
             .try_add_fields(v)
             .build()
             .unwrap();
+
+        assert_eq!(point.to_text(), r#"test field1="value1",field2="value2""#);
     }
 }
