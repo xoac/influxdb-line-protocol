@@ -1,4 +1,4 @@
-use super::Point;
+use super::{Point, Precision};
 
 /// A collection of data [`Points`] in InfluxDB line protocol format.
 ///
@@ -40,6 +40,28 @@ impl Batch {
             .join("\n")
     }
 
+    pub fn precision(&self) -> Option<Precision> {
+        debug_assert!(Precision::Nanos > Precision::Secs);
+        self.0.iter().map(|p| p.precision()).fold(None, |p, acc| {
+            if p.map(|p| p.is_most_precise()).unwrap_or(false) {
+                // this is early ending -- returns from precision
+                return p;
+            }
+            match (p, acc) {
+                (Some(p), Some(acc)) => {
+                    if p > acc {
+                        Some(p)
+                    } else {
+                        Some(acc)
+                    }
+                }
+                (Some(p), None) => Some(p),
+                (None, Some(acc)) => Some(acc),
+                (None, None) => None,
+            }
+        })
+    }
+
     pub fn clone_and_clear(&mut self) -> Self {
         let mut new_v = Vec::with_capacity(self.len());
         std::mem::swap(&mut self.0, &mut new_v);
@@ -60,5 +82,24 @@ impl Batch {
 
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Timestamp;
+
+    #[test]
+    fn precision_test() {
+        let b_a1 = Point::builder("a")
+            .unwrap()
+            .try_add_field(("a", "a"))
+            .timestamp(Timestamp::Nanos(1));
+        let b_a2 = b_a1.clone().timestamp(Timestamp::Milli(2));
+        assert_eq!(
+            Batch::from(vec![b_a1.build().unwrap(), b_a2.build().unwrap()]).precision(),
+            Some(Precision::Nanos)
+        );
     }
 }

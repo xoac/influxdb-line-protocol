@@ -1,3 +1,5 @@
+use crate::Precision;
+
 /// InfluxDB Timestamp
 ///
 /// Values are counted from UNIX_EPOCH.
@@ -13,6 +15,16 @@ pub enum Timestamp {
 }
 
 impl Timestamp {
+    pub fn precision(self) -> Option<Precision> {
+        match self {
+            Self::Now => None,
+            Self::Nanos(_) => Some(Precision::Nanos),
+            Self::Micro(_) => Some(Precision::Micro),
+            Self::Milli(_) => Some(Precision::Milli),
+            Self::Secs(_) => Some(Precision::Secs),
+        }
+    }
+
     pub fn timestamp_nanos(self) -> Option<i64> {
         match self {
             Self::Now => None,

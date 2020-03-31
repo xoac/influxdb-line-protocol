@@ -19,6 +19,7 @@ pub mod field;
 mod measurement;
 mod name_restriction;
 mod point;
+mod precision;
 pub mod tag;
 mod timestamp;
 
@@ -26,6 +27,7 @@ pub use batch::Batch;
 pub use field::{Field, FieldKey, FieldValue};
 pub use measurement::Measurement;
 pub use point::{Point, PointBuilder};
+pub use precision::Precision;
 pub use tag::{Tag, TagKey, TagValue};
 pub use timestamp::Timestamp;
 

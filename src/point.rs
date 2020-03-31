@@ -1,4 +1,4 @@
-use super::{error::Error, escape, Field, Measurement, Tag, TagSet, Timestamp};
+use super::{error::Error, escape, Field, Measurement, Precision, Tag, TagSet, Timestamp};
 use std::{convert::TryInto, iter::FromIterator};
 
 /// Represents a single data record
@@ -17,6 +17,10 @@ pub struct Point {
 impl Point {
     pub fn builder(measurment: impl Into<String>) -> Result<PointBuilder, Error> {
         PointBuilder::new(measurment)
+    }
+
+    pub fn precision(&self) -> Option<Precision> {
+        self.timestamp.precision()
     }
 
     pub(crate) fn to_text(&self) -> String {
