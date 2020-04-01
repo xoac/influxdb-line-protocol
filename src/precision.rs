@@ -11,13 +11,6 @@ pub enum Precision {
     Nanos,
 }
 
-impl Precision {
-    /// Returns true if precision is nanoseconds (most precise Influx Timestamp).
-    pub(crate) fn is_most_precise(self) -> bool {
-        self == Self::Nanos
-    }
-}
-
 #[cfg(feature = "serde")]
 impl Serialize for Precision {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -70,5 +63,12 @@ mod tests {
         assert!(Precision::Nanos > Precision::Milli);
         assert!(Precision::Nanos > Precision::Micro);
         assert!(Precision::Nanos == Precision::Nanos);
+    }
+
+    #[test]
+    fn precision_ord_option_test() {
+        assert!(Some(Precision::Nanos) > Some(Precision::Secs));
+        assert!(Some(Precision::Secs) > None);
+        assert!(!(Some(Precision::Secs) < None));
     }
 }

@@ -23,7 +23,7 @@ impl Point {
         self.timestamp.precision()
     }
 
-    pub(crate) fn to_text(&self) -> String {
+    pub(crate) fn to_text_with_precision(&self, precision: Option<Precision>) -> String {
         let mut line = escape::measurement(&self.measurment);
         for tag_set in &self.tag_set {
             line += &format!(",{}", tag_set.to_text());
@@ -39,9 +39,19 @@ impl Point {
             }
         }
 
-        if let Some(ts) = self.timestamp.timestamp_nanos() {
-            line += " ";
-            line += &ts.to_string();
+        let ts = precision
+            .map(|p| self.timestamp.timestamp_precision_lossy(p))
+            .unwrap_or(self.timestamp);
+
+        match ts {
+            Timestamp::Now => {}
+            Timestamp::Nanos(v)
+            | Timestamp::Micro(v)
+            | Timestamp::Milli(v)
+            | Timestamp::Secs(v) => {
+                line += " ";
+                line += &v.to_string();
+            }
         }
 
         line
@@ -222,6 +232,9 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(point.to_text(), r#"test field1="value1",field2="value2""#);
+        assert_eq!(
+            point.to_text_with_precision(None),
+            r#"test field1="value1",field2="value2""#
+        );
     }
 }
