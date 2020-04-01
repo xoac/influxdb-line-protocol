@@ -1,6 +1,6 @@
 use super::{Point, Precision};
 
-fn highest_precision(vec: &Vec<Point>) -> Option<Precision> {
+fn highest_precision(vec: &[Point]) -> Option<Precision> {
     debug_assert!(Precision::Nanos > Precision::Secs);
     vec.iter().map(|p| p.precision()).fold(None, |p, acc| {
         if p.map(|p| p == Precision::Nanos).unwrap_or(false) {
