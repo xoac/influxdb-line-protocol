@@ -1,12 +1,26 @@
 use super::{Point, Precision};
 
+fn highest_precision(vec: &Vec<Point>) -> Option<Precision> {
+    debug_assert!(Precision::Nanos > Precision::Secs);
+    vec.iter().map(|p| p.precision()).fold(None, |p, acc| {
+        if p.map(|p| p == Precision::Nanos).unwrap_or(false) {
+            // this is early ending -- returns from precision
+            return p;
+        }
+        if p > acc {
+            p
+        } else {
+            acc
+        }
+    })
+}
+
 /// A collection of data [`Points`] in InfluxDB line protocol format.
 ///
 /// [`Points`]:Point
 #[derive(Debug, Clone)]
 pub struct Batch {
     inner: Vec<Point>,
-    precision: Option<Precision>,
 }
 
 impl<V> From<V> for Batch
@@ -33,25 +47,20 @@ where
 }
 
 impl Batch {
-    fn update_precision(&mut self, precision: Option<Precision>) {
-        if self.precision < precision {
-            self.precision = precision;
-        }
-    }
-}
-
-impl Batch {
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             inner: Vec::with_capacity(capacity),
-            precision: None,
         }
     }
 
-    pub fn to_line_protocol(&self) -> String {
+    /// This will build batch in InlfuxDB line protocol format.
+    ///
+    /// If you specify `precision` that is less accurate than point timestamp precision stored inside Batch
+    /// you will silently lose point precision. To use precision defined during point building pass None to this function.
+    pub fn to_line_protocol_lossy(&self, precision: Option<Precision>) -> String {
         self.inner
             .iter()
-            .map(|point| point.to_text_with_precision(self.precision))
+            .map(|point| point.to_text_with_precision(precision))
             .collect::<Vec<_>>()
             .join("\n")
     }
@@ -59,17 +68,19 @@ impl Batch {
     pub fn clone_and_clear(&mut self) -> Self {
         let mut new_v = Vec::with_capacity(self.len());
         std::mem::swap(&mut self.inner, &mut new_v);
-        let r = Self {
-            inner: new_v,
-            precision: self.precision,
-        };
-        self.precision = None;
-        r
+        Self { inner: new_v }
+    }
+
+    /// Get current precision.
+    ///
+    /// # Note
+    /// Adding any point can change precision.
+    pub fn precision(&self) -> Option<Precision> {
+        highest_precision(&self.inner)
     }
 
     pub fn push_point(&mut self, p: impl Into<Point>) {
         let point = p.into();
-        self.update_precision(point.precision());
         self.inner.push(point)
     }
 
@@ -80,7 +91,6 @@ impl Batch {
     }
 
     pub fn is_empty(&self) -> bool {
-        debug_assert!(self.precision.is_none());
         self.inner.is_empty()
     }
 
@@ -102,7 +112,7 @@ mod tests {
             .timestamp(Timestamp::Nanos(1));
         let b_a2 = b_a1.clone().timestamp(Timestamp::Milli(2));
         assert_eq!(
-            Batch::from(vec![b_a1.build().unwrap(), b_a2.build().unwrap()]).precision,
+            Batch::from(vec![b_a1.build().unwrap(), b_a2.build().unwrap()]).precision(),
             Some(Precision::Nanos)
         );
     }
