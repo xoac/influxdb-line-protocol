@@ -83,8 +83,8 @@ impl PointBuilder {
         })
     }
 
-    pub fn add_tag(mut self, tag_set: Tag) -> Self {
-        self.point.tag_set.push(tag_set);
+    pub fn add_tag(mut self, tag_set: impl Into<Tag>) -> Self {
+        self.point.tag_set.push(tag_set.into());
         self
     }
 
@@ -134,8 +134,8 @@ impl PointBuilder {
         }
     }
 
-    pub fn add_field(mut self, field: Field) -> Self {
-        self.point.field_set.push(field);
+    pub fn add_field(mut self, field: impl Into<Field>) -> Self {
+        self.point.field_set.push(field.into());
         self
     }
 
