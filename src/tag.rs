@@ -127,7 +127,7 @@ impl TryFrom<&str> for TagValue {
 ///
 /// Tags are an optional part of the data structure, but they are useful for storing commonly-queried metadata;
 /// tags are indexed so queries on tags are performant.
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Tag {
     key: TagKey,
     value: TagValue,

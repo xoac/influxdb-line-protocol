@@ -199,6 +199,10 @@ impl PointBuilder {
             panic!("At least one field value is required!");
         }
 
+        // https://v2.docs.influxdata.com/v2.0/write-data/best-practices/optimize-writes/#sort-tags-by-key
+        // TODO make sure it match `https://golang.org/pkg/bytes/#Compare` function
+        self.point.tag_set.sort();
+
         if let Some(err) = self.errors.drain(..).next() {
             Err(err)
         } else {
